@@ -134,7 +134,7 @@
     <script>
       function toggleMenu() { const m=document.getElementById('hamburgerMenu'); m.style.display=m.style.display==='none'?'block':'none'; }
       document.addEventListener('click',function(e){ const btn=document.getElementById('hamburgerBtn'); if(btn&&!btn.contains(e.target)) document.getElementById('hamburgerMenu').style.display='none'; });
-      function loginWithDiscord(){ const CLIENT_ID='1501765131749687316'; const REDIRECT_URI=encodeURIComponent('https://evgmercader.github.io/booga-tournament/'); const SCOPE='identify'; window.location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${SCOPE}`; }
+      function loginWithDiscord(){ const CLIENT_ID='1501765131749687316'; const REDIRECT_URI=encodeURIComponent('https://evgmercader.github.io/booga-tournament/'); const SCOPE='identify guilds guilds.members.read'; window.location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${SCOPE}`; }
       function resetBackgroundHome(e){
         e.preventDefault();
         localStorage.removeItem('booga_bg_url');
@@ -143,11 +143,38 @@
         location.reload();
       }
       function applyUserUI(user){ const avatarURL=user.avatar?`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`:`https://cdn.discordapp.com/embed/avatars/0.png`; document.getElementById('userAvatar').src=avatarURL; document.getElementById('userName').textContent=user.username; document.getElementById('userSection').style.display='flex'; document.getElementById('loginBtn').style.display='none'; document.getElementById('menuLoginRow').style.display='none'; }
+      const DQR_GUILD_ID='1493389918695723102';
+      const DQR_ROLE_MAP=[
+        {id:'1493458408496562296',name:'Developer',icon:'🛠️',color:'#a855f7'},
+        {id:'1493395965795897445',name:'Creator',icon:'🎨',color:'#f59e0b'},
+        {id:'1543457687210172466',name:'Senior Mod',icon:'🛡️',color:'#3b82f6'},
+        {id:'1544693694349836409',name:'Mod',icon:'🛡️',color:'#38bdf8'},
+        {id:'1544693922687750245',name:'Member',icon:'🎮',color:'#94a3b8'}
+      ];
+      function resolveDiscordRole(isOwner,roleIds){
+        if(isOwner) return {name:'Owner',icon:'👑',color:'#22c55e'};
+        for(const r of DQR_ROLE_MAP){ if(roleIds&&roleIds.includes(r.id)) return r; }
+        return null;
+      }
+      function fetchDiscordRole(token){
+        return Promise.all([
+          fetch('https://discord.com/api/users/@me/guilds',{headers:{Authorization:'Bearer '+token}}).then(r=>r.ok?r.json():[]).catch(()=>[]),
+          fetch('https://discord.com/api/users/@me/guilds/'+DQR_GUILD_ID+'/member',{headers:{Authorization:'Bearer '+token}}).then(r=>r.ok?r.json():null).catch(()=>null)
+        ]).then(([guilds,member])=>{
+          const g=Array.isArray(guilds)?guilds.find(x=>x.id===DQR_GUILD_ID):null;
+          const isOwner=!!(g&&g.owner);
+          const roleIds=member&&member.roles?member.roles:[];
+          const role=resolveDiscordRole(isOwner,roleIds);
+          if(role) sessionStorage.setItem('discordRoleInfo',JSON.stringify(role));
+          else sessionStorage.removeItem('discordRoleInfo');
+          return role;
+        }).catch(()=>null);
+      }
       (function(){
         (function(){ const saved=localStorage.getItem('booga_bg_url')||localStorage.getItem('booga_bg'); if(saved&&saved!=='original'){ const bgImg=document.querySelector('.video-bg img'); if(bgImg) bgImg.src=saved; } })();
-        const saved=sessionStorage.getItem('discordUser'); if(saved){ applyUserUI(JSON.parse(saved)); }
+        const saved=sessionStorage.getItem('discordUser'); if(saved){ applyUserUI(JSON.parse(saved)); const savedToken=sessionStorage.getItem('discordToken'); if(savedToken&&!sessionStorage.getItem('discordRoleInfo')){ fetchDiscordRole(savedToken); } }
         const hash=window.location.hash;
-        if(hash.includes('access_token')){ const params=new URLSearchParams(hash.slice(1)); const token=params.get('access_token'); if(token){ sessionStorage.setItem('discordToken',token); fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).then(user=>{ sessionStorage.setItem('discordUser',JSON.stringify(user)); applyUserUI(user); history.replaceState(null,'',window.location.pathname); }); } }
+        if(hash.includes('access_token')){ const params=new URLSearchParams(hash.slice(1)); const token=params.get('access_token'); if(token){ sessionStorage.setItem('discordToken',token); fetch('https://discord.com/api/users/@me',{headers:{Authorization:'Bearer '+token}}).then(r=>r.json()).then(user=>{ sessionStorage.setItem('discordUser',JSON.stringify(user)); applyUserUI(user); fetchDiscordRole(token); history.replaceState(null,'',window.location.pathname); }); } }
       })();
     </script>
   </div>
