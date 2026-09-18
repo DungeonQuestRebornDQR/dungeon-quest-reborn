@@ -134,7 +134,7 @@
     <script>
       function toggleMenu() { const m=document.getElementById('hamburgerMenu'); m.style.display=m.style.display==='none'?'block':'none'; }
       document.addEventListener('click',function(e){ const btn=document.getElementById('hamburgerBtn'); if(btn&&!btn.contains(e.target)) document.getElementById('hamburgerMenu').style.display='none'; });
-      function loginWithDiscord(){ const CLIENT_ID='1550615278294147163'; const REDIRECT_URI=encodeURIComponent('https://dungeonquestreborndqr.github.io/dungeon-quest-reborn/'); const SCOPE=encodeURIComponent('identify guilds guilds.members.read'); window.location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${SCOPE}`; }
+      function loginWithDiscord(){ const CLIENT_ID='1501765131749687316'; const REDIRECT_URI=encodeURIComponent('https://dungeonquestreborndqr.github.io/dungeon-quest-reborn/'); const SCOPE=encodeURIComponent('identify'); window.location.href=`https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=token&scope=${SCOPE}`; }
       function resetBackgroundHome(e){
         e.preventDefault();
         localStorage.removeItem('booga_bg_url');
